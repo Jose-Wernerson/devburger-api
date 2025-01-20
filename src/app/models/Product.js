@@ -18,8 +18,7 @@ class Product extends Model {
 			},
 			{
 				sequelize,
-				tableName: 'products',
-				timestamps: true, // Garante que as colunas createdAt e updatedAt sejam gerenciadas automaticamente
+				// Isso faz o Sequelize usar created_at e updated_at
 			},
 		)
 	}
