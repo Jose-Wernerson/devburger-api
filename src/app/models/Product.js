@@ -7,6 +7,7 @@ class Product extends Model {
 				name: Sequelize.STRING,
 				price: Sequelize.INTEGER,
 				path: Sequelize.STRING,
+				offer: Sequelize.BOOLEAN,
 				url: {
 					type: Sequelize.VIRTUAL,
 					get() {
@@ -16,7 +17,6 @@ class Product extends Model {
 			},
 			{
 				sequelize,
-				// Isso faz o Sequelize usar created_at e updated_at
 			},
 		)
 

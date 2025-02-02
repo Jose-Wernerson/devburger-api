@@ -1,59 +1,111 @@
 import * as Yup from 'yup'
 import Category from '../models/Category'
+import User from '../models/User'
 
 class CategoryController {
 	async store(request, response) {
+		const schema = Yup.object({
+			name: Yup.string().required(),
+		})
+
 		try {
-			// Schema de validação
-			const schema = Yup.object({
-				name: Yup.string().required('Nome é obrigatório'),
-			})
+			schema.validate(request.body, { abortEarly: false })
+		} catch (err) {
+			return response.status(400).json({ error: err.errors })
+		}
 
-			// Validação do corpo da requisição
-			await schema.validate(request.body, { abortEarly: false })
+		const { admin: isAdmin } = await User.findByPk(request.userId)
 
-			// Desestruturação dos dados
-			const { name } = request.body
+		if (!isAdmin) {
+			return response.status(401).json()
+		}
 
-			const categoryExists = await Category.findOne({
+		const { filename: path } = request.file
+		const { name } = request.body
+
+		const categoryExists = await Category.findOne({
+			where: {
+				name,
+			},
+		})
+
+		if (categoryExists) {
+			return response.status(400).json({ error: 'Category already exists' })
+		}
+
+		const { id } = await Category.create({
+			name,
+			path,
+		})
+
+		return response.status(201).json({ id, name })
+	}
+
+	async update(request, response) {
+		const schema = Yup.object({
+			name: Yup.string(),
+		})
+
+		try {
+			schema.validate(request.body, { abortEarly: false })
+		} catch (err) {
+			return response.status(400).json({ error: err.errors })
+		}
+
+		const { admin: isAdmin } = await User.findByPk(request.userId)
+
+		if (!isAdmin) {
+			return response.status(401).json()
+		}
+
+		const { id } = request.params
+
+		const categoryExists = await Category.findByPk(id)
+
+		if (!categoryExists) {
+			return response
+				.status(400)
+				.json({ message: 'Make sure your category ID is correct' })
+		}
+
+		let path
+		if (request.file) {
+			path = request.file.filename
+		}
+
+		const { name } = request.body
+
+		if (name) {
+			const categoryNameExists = await Category.findOne({
 				where: {
 					name,
 				},
 			})
-			if (categoryExists) {
-				return response.status(400).json({ error: 'category already exists' })
+
+			if (categoryNameExists && categoryNameExists.id !== +id) {
+				return response.status(400).json({ error: 'Category already exists' })
 			}
-
-			// Criação do produto
-			const { id } = await Category.create({
-				name,
-				// Os campos created_at e updated_at serão preenchidos automaticamente pelo Sequelize
-			})
-
-			return response.status(201).json({ id, name })
-		} catch (err) {
-			// Se for erro de validação do Yup
-			if (err instanceof Yup.ValidationError) {
-				return response.status(400).json({ errors: err.errors })
-			}
-
-			// Para outros tipos de erro
-			console.error(err)
-			return response.status(500).json({ error: 'Erro interno do servidor' })
 		}
+
+		await Category.update(
+			{
+				name,
+				path,
+			},
+			{
+				where: {
+					id,
+				},
+			},
+		)
+
+		return response.status(200).json()
 	}
 
 	async index(request, response) {
-		try {
-			const categories = await Category.findAll({
-				order: [['created_at', 'DESC']], // Ordenar do mais recente para o mais antigo
-			})
+		const categories = await Category.findAll()
 
-			return response.json(categories)
-		} catch (err) {
-			console.error(err)
-			return response.status(500).json({ error: 'Erro interno do servidor' })
-		}
+		return response.json(categories)
 	}
 }
 

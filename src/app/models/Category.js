@@ -5,14 +5,27 @@ class Category extends Model {
 		super.init(
 			{
 				name: Sequelize.STRING,
+				path: Sequelize.STRING,
+				url: {
+					type: Sequelize.VIRTUAL,
+					get() {
+						return `http://localhost:3001/category-file/${this.path}`
+					},
+				},
 			},
 			{
 				sequelize,
-				// Isso faz o Sequelize usar created_at e updated_at
 			},
 		)
 
 		return this
+	}
+
+	static associate(models) {
+		this.hasMany(models.Product, {
+			foreignKey: 'category_id',
+			as: 'products',
+		})
 	}
 }
 
