@@ -15,7 +15,7 @@ class UserController {
 		try {
 			schema.validateSync(request.body, { abortEarly: false })
 		} catch (err) {
-			return response.status(400).json({ error: err.errors })
+			return response.status(409).json({ error: err.errors })
 		}
 
 		const { name, email, password, admin } = request.body
@@ -26,7 +26,7 @@ class UserController {
 			},
 		})
 		if (userExists) {
-			return response.status(400).json({ error: 'User already exists' })
+			return response.status(409).json({ error: 'User already exists' })
 		}
 
 		const user = await User.create({
