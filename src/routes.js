@@ -7,6 +7,7 @@ import SessionController from './app/controllers/SessionController'
 import UserController from './app/controllers/UserController'
 import authMiddleware from './app/middlewares/auth'
 import multerConfig from './config/multer'
+import CreatPaymentIntentController from './app/controllers/Stripe/CreatPaymentIntentController'
 
 const routes = new Router()
 
@@ -27,5 +28,7 @@ routes.put('/categories/:id', upload.single('file'), CategoryController.update)
 routes.post('/orders', OrderController.store)
 routes.get('/orders', OrderController.index)
 routes.put('/orders/:id', OrderController.update)
+
+routes.post("/create-payment-intent", CreatPaymentIntentController.store);
 
 export default routes
