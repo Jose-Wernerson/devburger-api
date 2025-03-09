@@ -1,3 +1,4 @@
+require('dotenv').config()
 module.exports = {
 	dialect: 'postgresql',
 	host: 'localhost',
@@ -10,4 +11,6 @@ module.exports = {
 		underscored: true,
 		underscoredAll: true,
 	},
+	// #Stripe
+	stripe_secret_key: process.env.STRIPE_SECRET_KEY,
 }
