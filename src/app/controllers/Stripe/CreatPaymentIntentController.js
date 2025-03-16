@@ -36,16 +36,16 @@ class CreatPaymentIntentController {
 
                 const paymentIntent = await stripe.paymentIntents.create({
                     amount,
-                    currency: 'brl',
+                    currency: 'eur',
                     automatic_payment_methods: {
-                        enabled: true,
+                      enabled: true,
                     },
-                });
-
-                response.json({
+                  });
+              
+                  response.json({
                     clientSecret: paymentIntent.client_secret,
-                    dpmCherLink: 'https://dashboard.spripe.com/settings/payments_methods/review?transaction_id=${paymentIntent.id}',
-                });
+                    dpmCheckerLink: `https://dashboard.stripe.com/settings/payment_methods/review?transaction_id=${paymentIntent.id}`,
+                  });
 	}
 }
 
