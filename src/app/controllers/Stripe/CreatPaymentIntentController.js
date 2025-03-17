@@ -36,7 +36,7 @@ class CreatPaymentIntentController {
 
                 const paymentIntent = await stripe.paymentIntents.create({
                     amount,
-                    currency: 'eur',
+                    currency: 'brl',
                     automatic_payment_methods: {
                       enabled: true,
                     },
