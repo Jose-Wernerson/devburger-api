@@ -5,12 +5,14 @@ import User from '../models/User'
 import Order from '../schemas/Order'
 
 class OrderController {
+	// Função para criar um pedido
 	async store(request, response) {
-		const schema = Yup.object({
+		// Validação com Yup
+		const schema = Yup.object().shape({
 			products: Yup.array()
 				.required()
 				.of(
-					Yup.object({
+					Yup.object().shape({
 						id: Yup.number().required(),
 						quantity: Yup.number().required(),
 					}),
@@ -27,10 +29,9 @@ class OrderController {
 
 		const productsIds = products.map((product) => product.id)
 
+		// Busca os produtos no banco de dados
 		const findProducts = await Product.findAll({
-			where: {
-				id: productsIds,
-			},
+			where: { id: productsIds },
 			include: [
 				{
 					model: Category,
@@ -40,6 +41,7 @@ class OrderController {
 			],
 		})
 
+		// Formata os produtos
 		const formattedProducts = findProducts.map((product) => {
 			const productIndex = products.findIndex((item) => item.id === product.id)
 			return {
@@ -52,6 +54,7 @@ class OrderController {
 			}
 		})
 
+		// Cria o pedido
 		const order = {
 			user: {
 				id: request.userId,
@@ -63,24 +66,37 @@ class OrderController {
 
 		const createdOrder = await Order.create(order)
 
+		// Retorna o pedido criado
 		return response.status(201).json({
-			user: {
-				id: createdOrder.user.id,
-				name: createdOrder.user.name,
-			},
+			user: createdOrder.user,
 			products: formattedProducts,
 			status: createdOrder.status,
+			created_at: createdOrder.created_at, // Inclui a data na resposta
 		})
 	}
 
+	// Função para listar pedidos
 	async index(request, response) {
 		const orders = await Order.find()
 
-		return response.json(orders)
+		// Formata os pedidos para exibir a data corretamente
+		const formattedOrders = orders.map((order) => ({
+			...order.toObject(),
+			created_at: new Date(order.created_at).toLocaleDateString('pt-BR', {
+				day: '2-digit',
+				month: 'short',
+				hour: '2-digit',
+				minute: '2-digit',
+				hour12: false,
+			}),
+		}))
+
+		return response.json(formattedOrders)
 	}
 
+	// Função para atualizar o status de um pedido
 	async update(request, response) {
-		const schema = Yup.object({
+		const schema = Yup.object().shape({
 			status: Yup.string().required(),
 		})
 
@@ -92,7 +108,7 @@ class OrderController {
 
 		const { admin: isAdmin } = await User.findByPk(request.userId)
 		if (!isAdmin) {
-			return response.status(401).json()
+			return response.status(401).json({ error: 'Usuário não autorizado' })
 		}
 
 		const { id } = request.params
@@ -104,7 +120,7 @@ class OrderController {
 			return response.status(400).json({ error: err.message })
 		}
 
-		return response.json({ message: 'Status update sucessfully' })
+		return response.json({ message: 'Status atualizado com sucesso' })
 	}
 }
 
