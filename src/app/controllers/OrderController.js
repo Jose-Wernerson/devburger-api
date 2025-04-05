@@ -66,12 +66,14 @@ class OrderController {
 
 		const createdOrder = await Order.create(order)
 
-		// Retorna o pedido criado
+		// Retorna o pedido criado com verificação da data
 		return response.status(201).json({
 			user: createdOrder.user,
 			products: formattedProducts,
 			status: createdOrder.status,
-			created_at: createdOrder.created_at, // Inclui a data na resposta
+			created_at: createdOrder.created_at
+				? new Date(createdOrder.created_at).toISOString()
+				: null, // Verifica validade
 		})
 	}
 
@@ -79,17 +81,24 @@ class OrderController {
 	async index(request, response) {
 		const orders = await Order.find()
 
-		// Formata os pedidos para exibir a data corretamente
-		const formattedOrders = orders.map((order) => ({
-			...order.toObject(),
-			created_at: new Date(order.created_at).toLocaleDateString('pt-BR', {
-				day: '2-digit',
-				month: 'short',
-				hour: '2-digit',
-				minute: '2-digit',
-				hour12: false,
-			}),
-		}))
+		// Formata os pedidos com verificação da data
+		const formattedOrders = orders.map((order) => {
+			let formattedDate = null
+			if (order.created_at) {
+				try {
+					formattedDate = new Date(order.created_at).toISOString() // Tenta formatar a data
+				} catch (error) {
+					console.error(
+						`Erro ao formatar a data do pedido ${order._id}:`,
+						error.message,
+					)
+				}
+			}
+			return {
+				...order.toObject(),
+				created_at: formattedDate, // Define `null` caso a data seja inválida
+			}
+		})
 
 		return response.json(formattedOrders)
 	}
